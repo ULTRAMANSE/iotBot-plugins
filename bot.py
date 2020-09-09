@@ -52,37 +52,37 @@ def manage_plugin(ctx: GroupMsg):
         action.send_group_text_msg(
             ctx.FromGroupId,
             (
-                'py插件 => 发送启用插件列表\n'
-                '已停用py插件 => 发送停用插件列表\n'
-                '刷新py插件 => 刷新所有插件,包括新建文件\n'
-                '重载py插件+插件名 => 重载指定插件\n'
-                '停用py插件+插件名 => 停用指定插件\n'
-                '启用py插件+插件名 => 启用指定插件\n'
+                '插件列表 => 发送启用插件列表\n'
+                '已停用的插件 => 发送停用插件列表\n'
+                '刷新插件 => 刷新所有插件,包括新建文件\n'
+                '重载插件+插件名 => 重载指定插件\n'
+                '停用插件+插件名 => 停用指定插件\n'
+                '启用插件+插件名 => 启用指定插件\n'
             ),
         )
         return
     # 发送启用插件列表
-    if c == 'py插件':
+    if c == '插件列表':
         action.send_group_text_msg(ctx.FromGroupId, '\n'.join(bot.plugins))
         return
     # 发送停用插件列表
-    if c == '已停用py插件':
+    if c == '已停用的插件':
         action.send_group_text_msg(ctx.FromGroupId, '\n'.join(bot.removed_plugins))
         return
     with __import__('threading').Lock():
         try:
-            if c == '刷新py插件':
+            if c == '刷新插件':
                 bot.refresh_plugins()
             # 重载指定插件 重载py插件+[插件名]
-            elif c.startswith('重载py插件'):
+            elif c.startswith('重载插件'):
                 plugin_name = c[6:]
                 bot.reload_plugin(plugin_name)
             # 停用指定插件 停用py插件+[插件名]
-            elif c.startswith('停用py插件'):
+            elif c.startswith('停用插件'):
                 plugin_name = c[6:]
                 bot.remove_plugin(plugin_name)
             # 启用指定插件 启用py插件+[插件名]
-            elif c.startswith('启用py插件'):
+            elif c.startswith('启用插件'):
                 plugin_name = c[6:]
                 bot.recover_plugin(plugin_name)
         except Exception as e:
