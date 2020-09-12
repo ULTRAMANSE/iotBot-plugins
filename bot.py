@@ -90,25 +90,24 @@ def manage_plugin(ctx: GroupMsg):
 			action.send_group_text_msg(ctx.FromGroupId, '操作失败: %s' % e)
 
 
-def receive_group_msg():
-	@bot.on_group_msg
-	def day_news(ctx: GroupMsg):
-		try:
-			temp = []
-			rep = requests.get('http://api.tianapi.com/world/index?key=9ce8f79f3ad7ce68c6471bda7c4e2863&num=15',
-							   timeout=10)
-			rep.raise_for_status()
-			for i in range(len(rep.json()['newslist'])):
-				temp.append(rep.json()['newslist'][i]['title'])
-			# temp.append(rep.json()['newslist'][i]['url'])
-			max_len = max([len(x) for x in temp])
-			action.send_group_text_msg(ctx.FromGroupId, '\n'.join([x.center(max_len) for x in temp]))
-			return
-		except Exception as e:
-			print(e)
+# @bot.on_group_msg
+def receive_group_msg(ctx: GroupMsg):
+	try:
+		temp = []
+		rep = requests.get('http://api.tianapi.com/world/index?key=9ce8f79f3ad7ce68c6471bda7c4e2863&num=15',
+						   timeout=10)
+		rep.raise_for_status()
+		for i in range(len(rep.json()['newslist'])):
+			temp.append(rep.json()['newslist'][i]['title'])
+		# temp.append(rep.json()['newslist'][i]['url'])
+		max_len = max([len(x) for x in temp])
+		action.send_group_text_msg(ctx.FromGroupId, '\n'.join([x.center(max_len) for x in temp]))
+	except Exception as e:
+		print(e)
 	return
 
-bot.scheduler.every(1).minutes.do(receive_group_msg)
+
+bot.scheduler.every(10).seconds.do(receive_group_msg, bot.on_group_msg)
 
 if __name__ == "__main__":
 	bot.run()
