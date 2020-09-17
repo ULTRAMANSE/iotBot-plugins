@@ -1,7 +1,10 @@
 import requests
 from iotbot import IOTBOT, Action, GroupMsg
+import os
+import time, locale
 
 bot_qq = 3571557174
+os.environ['BOTQQ'] = str(bot_qq)
 bot = IOTBOT(bot_qq, use_plugins=True, plugin_dir='plugins')
 action = Action(bot)
 groupid = [1131414079]
@@ -9,7 +12,7 @@ groupid = [1131414079]
 
 # 群消息中间件使用示例
 def group_ctx_middleware(ctx):
-	ctx.master = [1076012962, 1305392603]  # 主人qq
+	ctx.master = [1076012962, 1305392603, 1264789049]  # 主人qq
 
 
 bot.register_group_context_middleware(group_ctx_middleware)
@@ -105,16 +108,65 @@ def receive_group_msg():
 		rep.raise_for_status()
 		for i in range(len(rep.json()['newslist'])):
 			temp.append(rep.json()['newslist'][i]['title'])
-		# temp.append(rep.json()['newslist'][i]['url'])
-		max_len = max([len(x) for x in temp])
-		for id in groupid:
-			action.send_group_text_msg(int(id), '\n'.join([x for x in temp]))
+			temp.append(rep.json()['newslist'][i]['url'])
+		# max_len = max([len(x) for x in temp])
+
+		for qid in groupid:
+			# 判断群号，添加前缀
+			if qid == 1131414079:
+				locale.setlocale(locale.LC_CTYPE, 'chinese')
+				today = time.strftime('%Y年%m月%d日')
+				temp.insert(0, "亲爱的开发者们，早上好！！！\n今天是" + today)
+			action.send_group_text_msg(int(qid), '\n'.join([x for x in temp]))
 	except Exception as e:
 		print(e)
 	return
 
 
-bot.scheduler.every().day.at("14:17").do(receive_group_msg)
+# bot.scheduler.every(10).seconds.do(receive_group_msg)
+
+
+bot.scheduler.every().day.at("09:00").do(receive_group_msg)
+
+
+def receive_group_csoup():
+	if 220000 > int(time.strftime("%H%M%S")) > 90000:
+		print(int(time.strftime("%H%M%S")))
+		try:
+			rep = requests.get('http://api.btstu.cn/yan/api.php?charset=utf-8&encode=json', timeout=10)
+			rep.raise_for_status()
+			content: str = rep.json()['text']
+			for qid in groupid:
+				action.send_group_text_msg(int(qid), content)
+		except Exception as e:
+			print(e)
+	else:
+		pass
+
+
+# bot.scheduler.every(10).seconds.do(receive_group_csoup)
+bot.scheduler.every(30).minutes.do(receive_group_csoup)
+
+
+def weather_forecast():
+	temp = []
+	str_w = ["city", "wea", "tem1", "tem2", "win", "humidity", "air", "air_level", "air_tips"]
+	try:
+		rep = requests.get("https://tianqiapi.com/api?version=v6&appid=35879982&appsecret=x78uwtTj&cityid=6510",
+						   timeout=10)
+		rep.raise_for_status()
+		for str_key in str_w:
+			temp.append(rep.json()[str_key])
+
+		str_k = temp[0] + "\n今日天气情况：" + temp[1] + "\n最高/最低温：" + temp[2] + "°C/" + temp[3] + "°C\n今日风力：" + temp[4] + "\n湿度：" + \
+				temp[5] + "\n空气质量：" + temp[6] + "\n空气质量等级：" + temp[7] + "\n" + temp[8]
+		for qid in groupid:
+			action.send_group_text_msg(int(qid), str_k)
+	except Exception as e:
+		print(e)
+
+
+bot.scheduler.every(10).seconds.do(weather_forecast)
 
 if __name__ == "__main__":
 	bot.run()
